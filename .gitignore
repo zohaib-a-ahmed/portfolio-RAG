@@ -30,6 +30,8 @@ yarn-error.log
 
 # Miscellaneous
 .env
+.env.local
+venv
 /.angular/cache
 .sass-cache/
 /connect.lock
@@ -37,6 +39,7 @@ yarn-error.log
 /libpeerconnection.log
 testem.log
 /typings
+test.txt
 
 # System files
 .DS_Store
