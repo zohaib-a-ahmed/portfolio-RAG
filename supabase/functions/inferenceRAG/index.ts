@@ -4,6 +4,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.44.4"
 import OpenAI from "https://deno.land/x/openai@v4.52.7/mod.ts";
 import { Ratelimit } from "https://cdn.skypack.dev/@upstash/ratelimit@latest";
 import { Redis } from "https://esm.sh/@upstash/redis";
+import { corsHeaders } from './_shared/cors.ts'
 
 const openAiKey = Deno.env.get('OPENAI_API_KEY')!
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!
@@ -24,12 +25,16 @@ serve(async (req) => {
   const body = await req.text();
   let { query } = JSON.parse(body);
 
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders })
+  }
+
   if (!query) {
     throw new Error("Query is required");
   }
 
   const ratelimit = new Ratelimit({
-    redis: Redis.fromEnv(),
+    redis: redis,
     limiter: Ratelimit.slidingWindow(3, "10 s"),
     analytics: true,
     prefix: "@upstash/ratelimit",
