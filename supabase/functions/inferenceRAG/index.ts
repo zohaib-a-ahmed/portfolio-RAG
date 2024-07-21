@@ -1,4 +1,3 @@
-// deno-lint-ignore-file
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.44.4"
 import OpenAI from "https://deno.land/x/openai@v4.52.7/mod.ts";
@@ -14,7 +13,7 @@ const redisToken = Deno.env.get("UPSTASH_REDIS_REST_TOKEN")!
 
 const openai = new OpenAI({
   apiKey: openAiKey
-  });
+});
 const supabase = createClient(supabaseUrl, supabaseServiceRoleKey)
 const redis = new Redis({
   url: redisUrl,
@@ -22,42 +21,48 @@ const redis = new Redis({
 });
 
 serve(async (req) => {
-  const body = await req.text();
-  let { query } = JSON.parse(body);
-
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    return new Response('ok', { headers: { ...corsHeaders } })
   }
 
-  if (!query) {
-    throw new Error("Query is required");
-  }
-
-  const ratelimit = new Ratelimit({
-    redis: redis,
-    limiter: Ratelimit.slidingWindow(3, "10 s"),
-    analytics: true,
-    prefix: "@upstash/ratelimit",
-  });
-
-  const identifier = "api";
-  const { success } = await ratelimit.limit(identifier);
-  if (!success) {
-    throw new Error("Rate Limit Exception");
-  }
-  
   try {
+    if (req.method !== 'POST') {
+      throw new Error(`HTTP method ${req.method} is not allowed.`);
+    }
+
+    const body = await req.text();
+    let { query } = JSON.parse(body);
+
+    if (!query) {
+      throw new Error("Query is required");
+    }
+
+    const ratelimit = new Ratelimit({
+      redis: redis,
+      limiter: Ratelimit.slidingWindow(3, "10 s"),
+      analytics: true,
+      prefix: "@upstash/ratelimit",
+    });
+
+    const identifier = "api";
+    const { success } = await ratelimit.limit(identifier);
+    if (!success) {
+      throw new Error("Rate Limit Exception");
+    }
+    
     const embedding = await embedQuery(query)
     const relevantDocuments = await retrieveRelevantDocuments(query, embedding)
     const response = await generateResponse(query, relevantDocuments)
     
     return new Response(JSON.stringify({ response }), {
-      headers: { 'Content-Type': 'application/json' },
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   } catch (error) {
+    console.error('Error:', error);
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
-      headers: { 'Content-Type': 'application/json' },
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   }
 })
