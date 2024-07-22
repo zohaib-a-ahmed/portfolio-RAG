@@ -2,7 +2,7 @@
 
 This repository contains two main functions for implementing a Retrieval-Augmented Generation (RAG) system using Supabase and OpenAI:
 
-1. Local Function: Processes documents for embedding and storage
+1. uploadDocuments: Processes documents for embedding and storage
 2. Deployed Supabase Edge Function: Handles user queries and performs RAG
 
 ## Architecture
@@ -86,7 +86,7 @@ For deploying the Supabase Edge Function, please refer to the official Supabase 
 
 ## Usage
 
-### Local Function
+### uploadDocument Usage
 
 To process and upload a document:
 
