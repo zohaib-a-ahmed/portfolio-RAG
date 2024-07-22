@@ -14,8 +14,8 @@ if not openai_api_key:
     raise ValueError("OPENAI_API_KEY environment variable not set")
 
 # Initialize Supabase client
-supabase_url = os.environ.get("_SUPABASE_URL")
-supabase_key = os.environ.get("_SUPABASE_KEY")
+supabase_url = os.environ.get("SUPABASE_URL")
+supabase_key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
 if not supabase_url or not supabase_key:
     raise ValueError("SUPABASE_URL or SUPABASE_KEY environment variable not set")
 
